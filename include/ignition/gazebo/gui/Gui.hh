@@ -19,7 +19,6 @@
 #define IGNITION_GAZEBO_GUI_GUI_HH_
 
 #include <memory>
-#include <string>
 #include <ignition/gui/Application.hh>
 
 #include "ignition/gazebo/config.hh"

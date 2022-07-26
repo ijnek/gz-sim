@@ -75,9 +75,14 @@ std::string createQuickStart(
     // Set default config file for Gazebo
     defaultConfig = getDefaultConfigFile(_guiConfig);
 
+  auto parentPath = common::parentPath(defaultConfig);
+  if (!common::exists(parentPath) && !common::createDirectory(parentPath))
+  {
+    ignerr << "Unable to create directory[" << parentPath << "]." << std::endl;
+  }
   app->SetDefaultConfigPath(defaultConfig);
 
-  auto quickStartHandler = new ignition::gazebo::gui::QuickStartHandler();
+  auto quickStartHandler = new QuickStartHandler();
   quickStartHandler->setParent(app->Engine());
 
   auto dialog = new ignition::gui::Dialog();
@@ -114,7 +119,7 @@ std::string createQuickStart(
   if (nullptr != app)
   {
     app->exec();
-    igndbg << "Shutting quick setup dialog" << std::endl;
+    igndbg << "Shutting quick start dialog" << std::endl;
   }
 
   // Update dialog config
@@ -357,12 +362,14 @@ int runGui(int &_argc, char **_argv,
   msgs::StringMsg msg;
 
   // Don't show quick start menu if a file is set from command line
-  if(strlen(_file) == 0 && _waitGui == 1)
+  if (strlen(_file) == 0 && _waitGui == 1)
   {
     // Don't show quick start menu in playback mode
     if ((nullptr != _guiConfig && std::string(_guiConfig) != "_playback_")
       || nullptr == _guiConfig)
-      msg.set_data(gazebo::gui::createQuickStart(_argc, _argv, _guiConfig));
+    {
+      msg.set_data(createQuickStart(_argc, _argv, _guiConfig));
+    }
   }
   else
   {
@@ -371,17 +378,16 @@ int runGui(int &_argc, char **_argv,
 
   // Notify the server with the starting world path
   // or an empty string if not specified
-  if(startingWorldPub.ThrottledUpdateReady())
+  int sleep{0};
+  int maxSleep{30};
+  while (!startingWorldPub.HasConnections() && sleep++ < maxSleep)
   {
-    for (auto i = 0; i < 5; ++i)
-    {
-      startingWorldPub.Publish(msg);
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
+  startingWorldPub.Publish(msg);
 
   // Start gazebo main GUI application
-  auto mainApp = gazebo::gui::createGui(_argc, _argv, _guiConfig);
+  auto mainApp = createGui(_argc, _argv, _guiConfig);
   if (nullptr != mainApp)
   {
     // Run main window.

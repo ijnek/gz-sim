@@ -20,6 +20,7 @@
 #include <QtCore>
 #include <QDesktopServices>
 #include <string>
+#include "ignition/gazebo/config.hh"
 
 namespace ignition
 {
@@ -69,7 +70,7 @@ class QuickStartHandler : public QObject
   private: bool showDefaultQuickStartOpts{true};
 
   /// \brief Installed worlds path.
-  private: std::string worldsPath{""};
+  private: std::string worldsPath{IGN_GAZEBO_WORLD_INSTALL_DIR};
 
   /// \brief Get starting world url.
   private: std::string startingWorld{""};
